@@ -2,7 +2,6 @@ const Question = require("../model/Question");
 
 const addSingleQuestion = async (question) => {
   try {
-    console.log(question.options);
     const text = question.text;
     const options = question.options;
     const answer = question.answer;
