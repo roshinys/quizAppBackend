@@ -42,7 +42,11 @@ io.on("connection", (socket) => {
   socket.on("room", async (roomId, token) => {
     socket.join(roomId);
     const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
-    socket.user = await User.findById(decoded.userId);
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return;
+    }
+    socket.user = user;
     if (!rooms[roomId]) {
       rooms[roomId] = [];
     }

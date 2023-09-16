@@ -5,13 +5,13 @@ const addSingleQuestion = async (question) => {
     const text = question.text;
     const options = question.options;
     const answer = question.answer;
-    const q = new Question({
+    const question = new Question({
       text,
       options,
       answer,
     });
-    await q.save();
-    return q;
+    await question.save();
+    return question;
   } catch (err) {
     throw new Error(err);
   }

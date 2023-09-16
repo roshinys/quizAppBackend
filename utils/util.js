@@ -50,7 +50,6 @@ const generateRandomQuestion = async () => {
     return randomQuestion;
   } catch (err) {
     console.log(err);
-    throw err;
   }
 };
 
