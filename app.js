@@ -78,6 +78,9 @@ io.on("connection", (socket) => {
       delete rooms[roomId];
     }
   });
+  socket.on("createRoom", () => {
+    socket.broadcast.emit("fetchRoom");
+  });
 });
 
 app.use((req, res) => {
