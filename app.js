@@ -14,9 +14,9 @@ app.use(cors());
 app.use(express.json());
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000", // Change this to the origin of your frontend application
-    methods: ["GET", "POST"], // Allow the HTTP methods you need
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -37,7 +37,6 @@ app.use("/result", middleware.authenticate, resultRoutes);
 //socket logic
 const User = require("./model/User");
 const rooms = {};
-// const questionList = {};
 
 io.on("connection", (socket) => {
   socket.on("room", async (roomId, token) => {
@@ -56,7 +55,6 @@ io.on("connection", (socket) => {
       await util.updateRoomStatus(roomId, "active");
       const room = await util.getRoomById(roomId);
       const questions = room.questions;
-      // questionList[roomId] = questions;
       io.to(roomId).emit("startGame", {
         message: "active",
       });
@@ -67,7 +65,6 @@ io.on("connection", (socket) => {
         }, i * 10000);
       }
     }
-    // console.log(rooms);
     socket.on("disconnect", () => {
       const index = rooms[roomId]?.indexOf(userId);
       if (index !== -1) {
@@ -75,24 +72,12 @@ io.on("connection", (socket) => {
       }
     });
   });
-  // socket.on("generateQuestion", async (roomId, index) => {
-  //   const question = questionList[roomId]?.[index];
-  //   io.to(roomId).emit("newQuestion", question);
-  // });
   socket.on("completed", async (roomId) => {
     await util.updateRoomStatus(roomId, "completed");
     if (rooms[roomId]) {
       delete rooms[roomId];
     }
-    // if (questionList[roomId]) {
-    //   delete questionList[roomId];
-    // }
   });
-});
-
-//test
-app.get("/protectedroute", middleware.authenticate, (req, res) => {
-  res.json({ protectedRoute: "yes" });
 });
 
 app.use((req, res) => {

@@ -4,12 +4,14 @@ const GameResult = require("../model/GameResult");
 
 const addToGameResult = async (roomId, userId, score) => {
   try {
-    let gameInfo = await GameResult.findOne({ roomId: roomId });
+    const { roomId, userId, score } = req.body;
+    const gameInfo = await GameResult.findOne({ roomId: roomId });
     if (!gameInfo) {
-      gameInfo = await GameResult.create({ roomId });
+      throw new Error("no room found");
     }
     gameInfo.results.push({ user: userId, score });
     await gameInfo.save();
+    return gameInfo;
   } catch (err) {
     console.error(err);
   }
