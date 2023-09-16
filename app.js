@@ -40,46 +40,54 @@ const rooms = {};
 
 io.on("connection", (socket) => {
   socket.on("room", async (roomId, token) => {
-    socket.join(roomId);
-    const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return;
-    }
-    socket.user = user;
-    if (!rooms[roomId]) {
-      rooms[roomId] = [];
-    }
-    const userId = socket.user._id.toString();
-    const index = rooms[roomId].indexOf(userId);
-    if (index === -1) {
-      rooms[roomId].push(userId);
-    }
-    if (rooms[roomId].length >= 2) {
-      await util.updateRoomStatus(roomId, "active");
-      const room = await util.getRoomById(roomId);
-      const questions = room.questions;
-      io.to(roomId).emit("startGame", {
-        message: "active",
+    try {
+      socket.join(roomId);
+      const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
+      const user = await User.findById(decoded.userId);
+      if (!user) {
+        return;
+      }
+      socket.user = user;
+      if (!rooms[roomId]) {
+        rooms[roomId] = [];
+      }
+      const userId = socket.user._id.toString();
+      const index = rooms[roomId].indexOf(userId);
+      if (index === -1) {
+        rooms[roomId].push(userId);
+      }
+      if (rooms[roomId].length >= 2) {
+        await util.updateRoomStatus(roomId, "active");
+        const room = await util.getRoomById(roomId);
+        const questions = room.questions;
+        io.to(roomId).emit("startGame", {
+          message: "active",
+        });
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => {
+            const question = questions?.[i];
+            io.to(roomId).emit("newQuestion", question, i);
+          }, i * 10000);
+        }
+      }
+      socket.on("disconnect", () => {
+        const index = rooms[roomId]?.indexOf(userId);
+        if (index !== -1) {
+          rooms[roomId]?.splice(index, 1);
+        }
       });
-      for (let i = 0; i < 5; i++) {
-        setTimeout(() => {
-          const question = questions?.[i];
-          io.to(roomId).emit("newQuestion", question, i);
-        }, i * 10000);
-      }
+    } catch (err) {
+      console.log(err);
     }
-    socket.on("disconnect", () => {
-      const index = rooms[roomId]?.indexOf(userId);
-      if (index !== -1) {
-        rooms[roomId]?.splice(index, 1);
-      }
-    });
   });
   socket.on("completed", async (roomId) => {
-    await util.updateRoomStatus(roomId, "completed");
-    if (rooms[roomId]) {
-      delete rooms[roomId];
+    try {
+      await util.updateRoomStatus(roomId, "completed");
+      if (rooms[roomId]) {
+        delete rooms[roomId];
+      }
+    } catch (err) {
+      console.log(err);
     }
   });
   socket.on("createRoom", () => {
