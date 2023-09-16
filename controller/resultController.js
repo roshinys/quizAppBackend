@@ -3,18 +3,19 @@ const GameResult = require("../model/GameResult");
 const addResult = async (req, res) => {
   try {
     const { roomId, userId, score } = req.body;
-    let gameInfo = await GameResult.findOne({ roomId: roomId });
+    const gameInfo = await GameResult.findOne({ roomId: roomId });
     if (!gameInfo) {
-      gameInfo = await GameResult.create({ roomId });
+      throw new Error("no room found");
     }
-    const existingUserIndex = gameInfo.results.findIndex(
-      (result) => result.user.toString() === userId
-    );
-    if (existingUserIndex !== -1) {
-      gameInfo.results[existingUserIndex].score = score;
-    } else {
-      gameInfo.results.push({ user: userId, score });
-    }
+    gameInfo.results.push({ user: userId, score });
+    // const existingUserIndex = gameInfo.results.findIndex(
+    //   (result) => result.user.toString() === userId
+    // );
+    // if (existingUserIndex !== -1) {
+    //   gameInfo.results[existingUserIndex].score = score;
+    // } else {
+    //   gameInfo.results.push({ user: userId, score });
+    // }
     await gameInfo.save();
     return res.json({ message: "Added Result", success: true, gameInfo });
   } catch (err) {

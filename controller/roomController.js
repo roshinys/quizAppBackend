@@ -1,5 +1,6 @@
 const Question = require("../model/Question");
 const Room = require("../model/Room");
+const GameResult = require("../model/GameResult");
 
 const getQuestionList = async (count) => {
   try {
@@ -23,6 +24,7 @@ const createRoom = async (req, res) => {
       questions,
     });
     await room.save();
+    await GameResult.create({ roomId: room._id });
     return res.json({
       message: "Created Room Successfully",
       success: true,

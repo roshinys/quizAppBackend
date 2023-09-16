@@ -37,7 +37,7 @@ app.use("/result", middleware.authenticate, resultRoutes);
 //socket logic
 const User = require("./model/User");
 const rooms = {};
-const questionList = {};
+// const questionList = {};
 
 io.on("connection", (socket) => {
   socket.on("room", async (roomId, token) => {
@@ -56,10 +56,16 @@ io.on("connection", (socket) => {
       await util.updateRoomStatus(roomId, "active");
       const room = await util.getRoomById(roomId);
       const questions = room.questions;
-      questionList[roomId] = questions;
+      // questionList[roomId] = questions;
       io.to(roomId).emit("startGame", {
         message: "active",
       });
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          const question = questions?.[i];
+          io.to(roomId).emit("newQuestion", question, i);
+        }, i * 10000);
+      }
     }
     // console.log(rooms);
     socket.on("disconnect", () => {
@@ -69,18 +75,18 @@ io.on("connection", (socket) => {
       }
     });
   });
-  socket.on("generateQuestion", async (roomId, index) => {
-    const question = questionList[roomId]?.[index];
-    io.to(roomId).emit("newQuestion", question);
-  });
+  // socket.on("generateQuestion", async (roomId, index) => {
+  //   const question = questionList[roomId]?.[index];
+  //   io.to(roomId).emit("newQuestion", question);
+  // });
   socket.on("completed", async (roomId) => {
     await util.updateRoomStatus(roomId, "completed");
     if (rooms[roomId]) {
       delete rooms[roomId];
     }
-    if (questionList[roomId]) {
-      delete questionList[roomId];
-    }
+    // if (questionList[roomId]) {
+    //   delete questionList[roomId];
+    // }
   });
 });
 
